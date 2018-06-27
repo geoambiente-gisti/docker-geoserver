@@ -4,6 +4,7 @@ MAINTAINER Heitor Carneiro <heitor.carneiro@geoambiente.com.br>
 
 ENV GEOSERVER_VERSION 2.12.3
 ENV GEOSERVER_DATA_DIR /var/local/geoserver
+ENV GEOSERVER_EXT_DIR /var/local/geoserver-exts
 ENV GEOSERVER_INSTALL_DIR /usr/local/geoserver
 
 # Uncomment to use APT cache (requires apt-cacher-ng on host)
@@ -40,6 +41,10 @@ RUN mkdir ${GEOSERVER_DATA_DIR} \
 	&& mv data/* ${GEOSERVER_DATA_DIR} \
 	&& rm -rf geoserver-${GEOSERVER_VERSION}-war.zip geoserver.war target *.txt
 
+# Extensions
+RUN mkdir -p ${GEOSERVER_EXT_DIR}/authkey
+ADD geoserver-exts/authkey/gs-authkey-2.12.3.jar ${GEOSERVER_EXT_DIR}/authkey/gs-authkey-2.12.3.jar
+
 # Enable CORS
 RUN sed -i '\:</web-app>:i\
     <filter>\
@@ -61,5 +66,8 @@ RUN sed -i '\:</web-app>:i\
 ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfDataSamplingInterval=500 \
  -Dorg.geotools.referencing.forceXY=true -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC -XX:NewRatio=2 \
  -XX:+CMSClassUnloadingEnabled -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+
+ADD start.sh /usr/local/bin/start.sh
+ENTRYPOINT ["/usr/local/bin/start.sh"]
 
 EXPOSE 8080
