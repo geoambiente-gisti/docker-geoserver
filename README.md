@@ -1,4 +1,4 @@
-docker-geoserver-lt
+docker-geoserver
 ================
 
 Dockerized GeoServer. This repository is a fork of [`oscarfonts`](https://github.com/oscarfonts/docker-geoserver).
