@@ -1,4 +1,4 @@
-docker-geoserver-lt
+docker-geoserver
 ================
 
 Dockerized GeoServer with: Authkey, Control Flow and Monitor. This repository is a fork of [`oscarfonts`](https://github.com/oscarfonts/docker-geoserver).
