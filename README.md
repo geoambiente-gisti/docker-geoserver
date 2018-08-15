@@ -1,9 +1,9 @@
 docker-geoserver-lt
 ================
 
-Dockerized GeoServer. This repository is a fork of [`oscarfonts`](https://github.com/oscarfonts/docker-geoserver).
+Dockerized GeoServer with: Authkey, Control Flow and Monitor. This repository is a fork of [`oscarfonts`](https://github.com/oscarfonts/docker-geoserver).
 
-The biggest change is the use of GeoServer 2.12.3, and the JAVA_OPTS.
+The biggest change is the use of GeoServer 2.12.4, and the **JAVA_OPTS**.
 
 ```sh
 # Tomcat environment
@@ -11,6 +11,7 @@ ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfD
  -Dorg.geotools.referencing.forceXY=true -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC -XX:NewRatio=2 \
  -XX:+CMSClassUnloadingEnabled -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
 ```
+
 
 ## Features
 
@@ -21,17 +22,17 @@ ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfD
 * Automatic installation of [Native JAI and Image IO](http://docs.geoserver.org/latest/en/user/production/java.html#install-native-jai-and-jai-image-i-o-extensions) for better performance.
 * Configurable extensions.
 * Automatic installation of [Microsoft Core Fonts](http://www.microsoft.com/typography/fonts/web.aspx) for better labelling compatibility.
-* AWS configuration files and scripts in order to deploy easily using [Elastic Beanstalk](https://aws.amazon.com/documentation/elastic-beanstalk/). See [github repo](https://github.com/hguerra/docker-geoserver-lt/blob/master/aws/README.md). Thanks to @victorzinho
+* AWS configuration files and scripts in order to deploy easily using [Elastic Beanstalk](https://aws.amazon.com/documentation/elastic-beanstalk/). See [github repo](https://github.com/hguerra/docker-geoserver-lt/blob/master/aws/README.md). 
+* Extension [Authkey](https://repo.boundlessgeo.com/main/org/geoserver/community/gs-authkey/2.12.4/) installed by default.
+* Extension [Control Flow](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-control-flow-plugin.zip) installed by default.
+* Extension [Monitor](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-monitor-plugin.zip) installed by default.
 
 
 ## Trusted builds
 
 Active versions with [automated builds](https://hub.docker.com/r/heitorcarneiro/geoserver/) available on [docker registry](https://registry.hub.docker.com/):
 
-* [`latest`, `2.13.0` (*2.13.0/Dockerfile*)](https://github.com/hguerra/docker-geoserver-lt/blob/master/2.13.0/Dockerfile)
-* [`maintenance`, `2.12.3` (*2.12.3/Dockerfile*)](https://github.com/hguerra/docker-geoserver-lt/blob/master/2.12.3/Dockerfile)
-* [`maintenance`, `2.12.2` (*2.12.2/Dockerfile*)](https://github.com/hguerra/docker-geoserver-lt/blob/master/2.12.2/Dockerfile)
-
+* [`maintenance`, `2.12.4` (*2.12.4/Dockerfile*)](https://github.com/hguerra/docker-geoserver-lt/blob/master/2.12.4/Dockerfile)
 
 Other experimental (not automated build):
 
