@@ -1,0 +1,81 @@
+version: "3"
+
+networks:
+  proxy:
+    external: true
+  internal:
+    external: false
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:1.6.4-alpine
+    command: --docker
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    labels:
+      - "traefik.frontend.rule=Host:monitor.localhost"
+      - "traefik.port=8080"
+    networks:
+      - "proxy"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "$PWD/traefik.toml:/traefik.toml"
+      - "$PWD/log:/traefik/log"
+
+  db:
+    image: mdillon/postgis:10
+    restart: always
+    environment:
+      - POSTGRES_USER=sema_ba
+      - POSTGRES_PASSWORD=sema_ba
+    ports:
+      - "5432:5432"
+    networks:
+      - "proxy"
+    volumes:
+      - "/home/vagrant/postgres-data/sema_ba_app:/var/lib/postgresql/data"
+      - "/vagrant/backup:/var/lib/postgresql/backup"
+
+  geoserver_master:
+    image: heitorcarneiro/geoserver:2.12.4-master
+    restart: always
+    volumes:
+      - "$PWD/geoserver-data:/var/local/geoserver"
+      - "$PWD/geoserver_master-logs:/usr/local/tomcat/logs"
+    links:
+      - "db:postgis"
+    labels:
+      - "traefik.backend=geoserver_master"
+      - "traefik.frontend.rule=Host:geoserver.localhost;PathPrefix:/geoserver"
+      - "traefik.docker.network=proxy"
+      - "traefik.port=8080"
+    networks:
+      - "internal"
+      - "proxy"
+    depends_on:
+      - "traefik"
+      - "db"
+
+  geoserver_slave:
+    image: heitorcarneiro/geoserver:2.12.4-slave
+    restart: always
+    volumes:
+      - "$PWD/geoserver-data:/var/local/geoserver"
+      - "$PWD/geoserver_slave-logs:/usr/local/tomcat/logs"
+    links:
+      - "db:postgis"
+    labels:
+      - "traefik.backend=geoserver_slave"
+      - "traefik.backend.loadbalancer.method=drr"
+      - "traefik.frontend.rule=Host:geoserver.localhost;PathPrefix:/geoserver/sema_ba"
+      - "traefik.docker.network=proxy"
+      - "traefik.port=8080"
+    networks:
+      - "internal"
+      - "proxy"
+    depends_on:
+      - "traefik"
+      - "db"

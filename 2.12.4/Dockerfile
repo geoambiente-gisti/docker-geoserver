@@ -77,9 +77,17 @@ RUN sed -i '\:</web-app>:i\
     </init-param>' ${GEOSERVER_INSTALL_DIR}/WEB-INF/web.xml
 
 # Tomcat environment
-ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfDataSamplingInterval=500 \
+ADD conf/server.xml /usr/local/tomcat/conf/server.xml
+
+# JVM
+# 2.12.4: -Xms2G -Xmx4G
+# 2.12.4-master: -Xms768M -Xmx1560M
+# 2.12.4-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
+ENV GEOSERVER_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfDataSamplingInterval=500 \
  -Dorg.geotools.referencing.forceXY=true -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC -XX:NewRatio=2 \
  -XX:+CMSClassUnloadingEnabled -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+
+ENV JAVA_OPTS "$JAVA_OPTS $GEOSERVER_OPTS"
 
 ADD start.sh /usr/local/bin/start.sh
 ENTRYPOINT ["/usr/local/bin/start.sh"]
