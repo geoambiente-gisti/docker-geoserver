@@ -1,66 +1,58 @@
-Deploy to AWS
-============
+GeoServer will be running in a load balanced environment, automatically created by [Elastic Beanstalk (EB)](https://aws.amazon.com/documentation/elastic-beanstalk/). All instances will use the same [data directory](http://docs.geoserver.org/latest/en/user/datadirectory/index.html) by accessing a shared filesystem ([EFS](https://aws.amazon.com/documentation/efs/)).
 
-Deploy to AWS using [Elastic Beanstalk (EB)](https://aws.amazon.com/documentation/elastic-beanstalk/).
+Whenever an instance modifies the shared data directory, the other instances need to reload the configuration. To do that, we set a cron job that uses the [REST API](http://docs.geoserver.org/stable/en/user/rest/api/index.html) to [reload](http://docs.geoserver.org/stable/en/user/rest/api/reload.html) the catalog (every 5 minutes by default).
 
-## Architecture
+## Create the file system
 
-GeoServer will be running in a single instance, automatically created by EB. That instance will use two volumes:
+We can create the empty file system easily either with the [console](https://docs.aws.amazon.com/efs/latest/ug/gs-step-two-create-efs-resources.html) or the [CLI](https://docs.aws.amazon.com/efs/latest/ug/wt1-create-efs-resources.html). Note the **File system ID** since we will be using it later.
 
-* A root volume where the operating system will run. This is automatically created by EB.
-* A volume holding the GeoServer data directory . This is created automatically by EB from an existing snapshot.
+> **NOTE**: In case you want to use an existing data directory, you will need to start with an empty one and fill it once the environment has been deployed.
 
-The volume holding the GeoServer data directory can be destroyed at any point (for rebuilding the environment, switch to a more powerful instance, etc.). Make sure you create snapshots **very** often.
+You might need to configure a specific security group allowing **inbound** traffic to the file system so instances are able to use it (see [official doc](https://docs.aws.amazon.com/efs/latest/ug/accessing-fs-create-security-groups.html) for details).
 
-The volume holding the GeoServer data directory will be mounted on the host instance on startup/creation. Then, that volume should be used as a volume for the Docker container.
+## Create the application version
 
-The process consists in three steps:
-* Create a first snapshot by hand.
-* Create an EB package specifying the latest snapshot and some volume configuration parameters.
-* Deploy to EB.
+First, you **must** modify the `.ebextensions/02_storage-efs-mountfilesystem.config` file to set your **File system ID**.
 
-## Create first snapshot
+You can change Java options in `.ebextensions/01_env.config`.
 
-Since the GeoServer *data_dir* volume has to be created from an existing snapshot, first we will need to create that snapshot by hand.
+You can change how often GeoServer is reloaded in `.ebextensions/03_reload-geoserver-on-change.config`.
 
-To do so:
+You can include any extension you want in a `extensions` directory in the package. You can create it easily with `build_exts_dir.sh -v <version> -t aws/extensions`.
 
-* [Create a new EBS volume](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-creating-volume.html).
-* [Attach it to an existing EC2 instance](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html).
-* [Prepare it](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html). Basically:
-```
-$ sudo mkfs -t ext4 /dev/<your_device>
-$ sudo mkdir /mnt/<your_device>
-$ sudo mount /dev/<your_device> /mnt/<your_device>
-```
-* Copy your initial GeoServer data directory to your mounted volume:
-```
-(from your local machine)
-$ scp -r -i your_ssh_key.pem <your_geoserver_data_dir> ec2-user@<your_ec2_machine>:/tmp
+Finally, just create a zip file containing `Dockerrun.aws.json`, `.ebextensions` and `extensions`.
 
-(from the EC2 instance)
-$ sudo mv /tmp/<your_geoserver_data_dir>/* /mnt/<your_device>
-```
+## Create the environment
 
-* [Create your first snapshot](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-creating-snapshot.html).
+It is recommended to use at least `t2.small` instances so GeoServer has enough memory.
 
-Once you have a proper snapshot you can umount the original volume and destroy it.
+You **must** set a `GS_ADMIN_PASS` environment variable with the password for `admin` in GeoServer. This is used to reload the catalog via REST when the shared data directory changes.
 
-## Package configuration files
-The EB package should contain the following:
-* `Dockerrun.aws.json`. This contains the name of the image to use (`oscarfonts/geoserver:<version>`) and options to map ports and files/directories between the host and the container.
-* `conf`. A directory containing the Tomcat `context.xml` file to deploy GeoServer. It is mapped to `/usr/local/tomcat/conf/Catalina/localhost`.
-* `.ebextensions/ebs.config`. A configuration file to specify EB how to mount the EBS volume with the GeoServer data directory and from which snapshot.
-* `.ebextensions/env.config`. A configuration file to specify environment variables, such as `CATALINA_OPTS`.
+You **must** set the **Session stickiness** option in the *Load Balancer* options so the user's session for the GeoServer GUI is bound to a specific instance (see [official doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-sticky-sessions.html) for details).
 
-In order to package it easily, a `package.sh` script is provided. It requires at least the snapshot identifier and the size of the volume to create:
-```
-$ ./package.sh -s snap-fa2bc934 -g 4
+You might need to configure a specific security group allowing **outbound** traffic to the file system so instances are able to use it (see [official doc](https://docs.aws.amazon.com/efs/latest/ug/accessing-fs-create-security-groups.html) for details).
+
+You might want to enable the *Load balancing across multiple Availability Zones* option in the *Load Balancer* options in case your instances are created in different Availability Zones.
+
+Then, just create the environment as any other Elastic Beanstalk environment.
+
+## Importing an existing data directory
+
+In case you want to import an existing data directory, wait until the environment has been created, then copy the data directory into the `/efs` directory of any of the instances and wait until the catalog is reloaded on all instances.
+
+## Deploy to a different path than `/geoserver`
+
+
+In case you want to deploy GeoServer to a different path than `/geoserver`, you will need to:
+
+* Include another volume in `Dockerrun.aws.json`:
+```json
+{
+  "HostDirectory": "/var/app/current/conf",
+  "ContainerDirectory": "/usr/local/tomcat/conf/Catalina/localhost"
+}
 ```
 
-The script should create a `geoserver.zip` file ready to be deployed to EB.
+* Include a `conf` directory with the configuration for Tomcat. You can see some examples in this repository (`<version>/conf` directories).
 
-## Deploy to Elastic Beanstalk
-
-To deploy, simply use the `geoserver.zip` file in an EB Docker environment.
-
+* Modify `.ebextensions/03_reload-geoserver-on-change.config` to access the correct REST API endpoint to reload the configuration.
