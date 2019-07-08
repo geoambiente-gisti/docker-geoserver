@@ -9,7 +9,7 @@ networks:
 services:
   traefik:
     container_name: traefik
-    image: traefik:1.6.4-alpine
+    image: traefik:1.7.12-alpine
     command: --docker
     restart: always
     ports:
@@ -36,15 +36,15 @@ services:
     networks:
       - "proxy"
     volumes:
-      - "/home/vagrant/postgres-data/sema_ba_app:/var/lib/postgresql/data"
-      - "/vagrant/backup:/var/lib/postgresql/backup"
+      - "$PWD/postgres-data:/var/lib/postgresql/data"
+      - "$PWD/postgres-backup:/var/lib/postgresql/backup"
 
-  geoserver_master:
-    image: heitorcarneiro/geoserver:2.12.4-master
+  geoservermaster:
+    image: heitorcarneiro/heitorcarneiro/geoserver:2.15.2-java11-hotspot
     restart: always
     volumes:
       - "$PWD/geoserver-data:/var/local/geoserver"
-      - "$PWD/geoserver_master-logs:/usr/local/tomcat/logs"
+      - "$PWD/geoservermaster-logs:/usr/local/tomcat/logs"
     links:
       - "db:postgis"
     labels:
@@ -59,12 +59,12 @@ services:
       - "traefik"
       - "db"
 
-  geoserver_slave:
-    image: heitorcarneiro/geoserver:2.12.4-slave
+  geoserverslave:
+    image: heitorcarneiro/heitorcarneiro/geoserver:2.15.2-java11-hotspot
     restart: always
     volumes:
       - "$PWD/geoserver-data:/var/local/geoserver"
-      - "$PWD/geoserver_slave-logs:/usr/local/tomcat/logs"
+      - "$PWD/geoserverslave-logs:/usr/local/tomcat/logs"
     links:
       - "db:postgis"
     labels:

@@ -1,17 +1,20 @@
 docker-geoserver
 ================
 
-Dockerized GeoServer with: Authkey, Control Flow and Monitor. This repository is a fork of [`oscarfonts`](https://github.com/oscarfonts/docker-geoserver).
+Dockerized GeoServer with extensions: Charts, Control Flow, CSS, MongoDB, Monitor, Query Layer, Vector Tiles, Authkey, GWC-S3, JDBC-Metrics, JDBCConfig and JDBCStore. 
 
-The biggest change is the use of GeoServer 2.12.4, and the **JAVA_OPTS**.
+The biggest change is the use of GeoServer 2.15.2, and the **JAVA_OPTS**.
 
 ```sh
 # Tomcat environment
-ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfDataSamplingInterval=500 \
- -Dorg.geotools.referencing.forceXY=true -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC -XX:NewRatio=2 \
- -XX:+CMSClassUnloadingEnabled -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
+ -Xms128M -Xmx756M \
+ -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
+ -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
+ -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
+ -Dorg.geotools.referencing.forceXY=true -Dfile.encoding=UTF8 -Duser.timezone=GMT -Djavax.servlet.request.encoding=UTF-8 -Djavax.servlet.response.encoding=UTF-8 -Duser.timezone=GMT -Dorg.geotools.shapefile.datetime=true \
+ -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
 ```
-
 
 ## Features
 
@@ -22,7 +25,7 @@ ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfD
 * Automatic installation of [Native JAI and Image IO](http://docs.geoserver.org/latest/en/user/production/java.html#install-native-jai-and-jai-image-i-o-extensions) for better performance.
 * Configurable extensions.
 * Automatic installation of [Microsoft Core Fonts](http://www.microsoft.com/typography/fonts/web.aspx) for better labelling compatibility.
-* AWS configuration files and scripts in order to deploy easily using [Elastic Beanstalk](https://aws.amazon.com/documentation/elastic-beanstalk/). See [github repo](https://github.com/hguerra/docker-geoserver-lt/blob/master/aws/README.md). 
+* AWS configuration files and scripts in order to deploy easily using [Elastic Beanstalk](https://aws.amazon.com/documentation/elastic-beanstalk/). See [github repo](https://github.com/hguerra/docker-geoserver/blob/master/aws/README.md). 
 * Extension [Authkey](https://repo.boundlessgeo.com/main/org/geoserver/community/gs-authkey/2.12.4/) installed by default.
 * Extension [Control Flow](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-control-flow-plugin.zip) installed by default.
 * Extension [Monitor](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-monitor-plugin.zip) installed by default.
@@ -32,13 +35,13 @@ ENV CATALINA_OPTS "-Djava.awt.headless=true -server -Xms2G -Xmx4G -Xrs -XX:PerfD
 
 Active versions with [automated builds](https://hub.docker.com/r/heitorcarneiro/geoserver/) available on [docker registry](https://registry.hub.docker.com/):
 
-* [`maintenance`, `2.12.4` (*2.12.4/Dockerfile*)](https://github.com/hguerra/docker-geoserver-lt/blob/master/2.12.4/Dockerfile)
+* [`maintenance`, `2.12.4` (*2.12.4/Dockerfile*)](https://github.com/hguerra/docker-geoserver/blob/master/2.12.4/Dockerfile)
 
 Other experimental (not automated build):
 
-* [`oracle`](https://github.com/hguerra/docker-geoserver-lt/blob/master/oracle/Dockerfile). Uses [wnameless/oracle-xe-11g](https://hub.docker.com/r/wnameless/oracle-xe-11g/), needs ojdbc7.jar and [setting up a database](https://github.com/hguerra/docker-geoserver-lt/blob/master/oracle/setup.sql). See [the run commands](https://github.com/hguerra/docker-geoserver-lt/blob/master/oracle/run.sh).
+* [`oracle`](https://github.com/hguerra/docker-geoserver/blob/master/oracle/Dockerfile). Uses [wnameless/oracle-xe-11g](https://hub.docker.com/r/wnameless/oracle-xe-11g/), needs ojdbc7.jar and [setting up a database](https://github.com/hguerra/docker-geoserver/blob/master/oracle/setup.sql). See [the run commands](https://github.com/hguerra/docker-geoserver/blob/master/oracle/run.sh).
 
-* [`h2-vector`](https://github.com/hguerra/docker-geoserver-lt/blob/master/h2-vector/Dockerfile). Plays nice with [hguerra/h2:geodb](https://hub.docker.com/r/hguerra/h2/tags/), and includes sample scripts for docker-compose and systemd.
+* [`h2-vector`](https://github.com/hguerra/docker-geoserver/blob/master/h2-vector/Dockerfile). Plays nice with [hguerra/h2:geodb](https://hub.docker.com/r/hguerra/h2/tags/), and includes sample scripts for docker-compose and systemd.
 
 
 ## Running
@@ -55,7 +58,54 @@ Run as a service, exposing port 8080 and using a hosted GEOSERVER_DATA_DIR:
 docker run -d -p 8080:8080 -v /path/to/local/data_dir:/var/local/geoserver --name=MyGeoServerInstance heitorcarneiro/geoserver
 ```
 
-### Configure extensions
+
+#### Using `docker-compose`:
+
+```yml
+version: "3"
+
+services:
+  db:
+    image: mdillon/postgis:11
+    restart: always
+    environment:
+      - POSTGRES_USER=geoserver
+      - POSTGRES_PASSWORD=geoserver
+    ports:
+      - "5432:5432"
+    volumes:
+      - "$PWD/postgres-data:/var/lib/postgresql/data"
+      - "$PWD/postgres-backup:/var/lib/postgresql/backup"
+
+  geoserver:
+    image: heitorcarneiro/geoserver:2.15.2-java11-hotspot
+    restart: always
+    environment:
+      - CATALINA_OPTS="-Djava.awt.headless=true -server -Xms512M -Xmx512M -DGEOSERVER_DATA_DIR=/var/local/geoserver"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "$PWD/geoserver-data:/var/local/geoserver"
+      - "$PWD/geoservermaster-logs:/usr/local/tomcat/logs"
+    links:
+      - "db:postgis"
+    depends_on:
+      - "db"
+```
+
+`mkdir postgres-data && mkdir postgres-backup && mkdir geoserver-data && mkdir geoservermaster-logs`
+
+`docker-compose up`
+
+
+### Customize JAVA_OPTS
+
+```
+docker run --name "geoserver" --link "mydb:postgis" --network proxy -p "8080:8080" -v "$PWD/geoserver-data:/var/local/geoserver" -e CATALINA_OPTS="-Djava.awt.headless=true -server -Xms512M -Xmx512M -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}" -d geoserver:2.15.2-java11-hotspot
+```
+
+
+### Configure your own extensions
 
 To add extensions to your GeoServer installation, provide a directory with the unzipped extensions separated by directories (one directory per extension):
 
@@ -63,9 +113,10 @@ To add extensions to your GeoServer installation, provide a directory with the u
 docker run -d -p 8080:8080 -v /path/to/local/exts_dir:/var/local/geoserver-exts/ --name=MyGeoServerInstance heitorcarneiro/geoserver
 ```
 
-You can use the `build_exts_dir.sh` script together with a [extensions](https://github.com/hguerra/docker-geoserver-lt/tree/master/extensions) configuration file to create your own extensions directory easily.
+You can use the `build_exts_dir.sh` script together with a [extensions](https://github.com/hguerra/docker-geoserver/tree/master/extensions) configuration file to create your own extensions directory easily.
 
 > **Warning**: The `.jar` files contained in the extensions directory will be copied to the `WEB-INF/lib` directory of the GeoServer installation. Make sure to include only `.jar` files from trusted extensions to avoid security risks.
+
 
 ### Configure path
 
@@ -75,7 +126,8 @@ It is also possible to configure the context path by providing a Catalina config
 docker run -d -p 8080:8080 -v /path/to/local/data_dir:/var/local/geoserver -v /path/to/local/conf_dir:/usr/local/tomcat/conf/Catalina/localhost --name=MyGeoServerInstance heitorcarneiro/geoserver
 ```
 
-See some [examples](https://github.com/hguerra/docker-geoserver-lt/tree/master/2.9.1/conf).
+See some [examples](https://github.com/hguerra/docker-geoserver/tree/master/2.15.2/conf).
+
 
 ### Logs
 
