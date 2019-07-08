@@ -26,22 +26,22 @@ ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
 * Configurable extensions.
 * Automatic installation of [Microsoft Core Fonts](http://www.microsoft.com/typography/fonts/web.aspx) for better labelling compatibility.
 * AWS configuration files and scripts in order to deploy easily using [Elastic Beanstalk](https://aws.amazon.com/documentation/elastic-beanstalk/). See [github repo](https://github.com/hguerra/docker-geoserver/blob/master/aws/README.md). 
-* Extension [Authkey](https://repo.boundlessgeo.com/main/org/geoserver/community/gs-authkey/2.12.4/) installed by default.
-* Extension [Control Flow](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-control-flow-plugin.zip) installed by default.
-* Extension [Monitor](http://sourceforge.net/projects/geoserver/files/GeoServer/2.12.4/extensions/geoserver-2.12.4-monitor-plugin.zip) installed by default.
+* Extension [Authkey](https://repo.boundlessgeo.com/main/org/geoserver/community/gs-authkey/2.15.2/) installed by default.
+* Extension [Control Flow](http://sourceforge.net/projects/geoserver/files/GeoServer/2.15.2/extensions/geoserver-2.15.2-control-flow-plugin.zip) installed by default.
+* Extension [Monitor](http://sourceforge.net/projects/geoserver/files/GeoServer/2.15.2/extensions/geoserver-2.15.2-monitor-plugin.zip) installed by default.
 
 
 ## Trusted builds
 
 Active versions with [automated builds](https://hub.docker.com/r/heitorcarneiro/geoserver/) available on [docker registry](https://registry.hub.docker.com/):
 
-* [`maintenance`, `2.12.4` (*2.12.4/Dockerfile*)](https://github.com/hguerra/docker-geoserver/blob/master/2.12.4/Dockerfile)
+* [`maintenance`, `2.15.2` (*2.15.2/java11-hotspot.dockerfile*)](https://github.com/hguerra/docker-geoserver/blob/master/2.15.2/java11-hotspot.dockerfile)
 
 Other experimental (not automated build):
 
-* [`oracle`](https://github.com/hguerra/docker-geoserver/blob/master/oracle/Dockerfile). Uses [wnameless/oracle-xe-11g](https://hub.docker.com/r/wnameless/oracle-xe-11g/), needs ojdbc7.jar and [setting up a database](https://github.com/hguerra/docker-geoserver/blob/master/oracle/setup.sql). See [the run commands](https://github.com/hguerra/docker-geoserver/blob/master/oracle/run.sh).
+* [`oracle`](https://github.com/hguerra/docker-geoserver/blob/master/oracle/java11-hotspot.dockerfile). Uses [wnameless/oracle-xe-11g](https://hub.docker.com/r/wnameless/oracle-xe-11g/), needs ojdbc7.jar and [setting up a database](https://github.com/hguerra/docker-geoserver/blob/master/oracle/setup.sql). See [the run commands](https://github.com/hguerra/docker-geoserver/blob/master/oracle/run.sh).
 
-* [`h2-vector`](https://github.com/hguerra/docker-geoserver/blob/master/h2-vector/Dockerfile). Plays nice with [hguerra/h2:geodb](https://hub.docker.com/r/hguerra/h2/tags/), and includes sample scripts for docker-compose and systemd.
+* [`h2-vector`](https://github.com/hguerra/docker-geoserver/blob/master/h2-vector/java11-hotspot.dockerfile). Plays nice with [hguerra/h2:geodb](https://hub.docker.com/r/hguerra/h2/tags/), and includes sample scripts for docker-compose and systemd.
 
 
 ## Running
