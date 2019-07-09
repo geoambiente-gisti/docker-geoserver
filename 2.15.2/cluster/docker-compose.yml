@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    restart: always
+    environment:
+      - DEFAULT_HOST=localhost
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "$PWD/template/nginx.tmpl:/app/nginx.tmpl:ro"
+      - "$PWD/logs/nginx:/var/log/nginx"
+      - "$PWD/credentials:/etc/nginx/htpasswd"
+      - "$PWD/conf:/etc/nginx/conf.d"
+      - "$PWD/vhost:/etc/nginx/vhost.d"
+      - "$PWD/html:/usr/share/nginx/html"
+      - "$PWD/certs:/etc/nginx/certs"
+
+  app:
+    image: jwilder/whoami
+    restart: always
+    environment:
+      - VIRTUAL_HOST=localhost
+
+  db:
+    image: mdillon/postgis:11
+    restart: always
+    environment:
+      - POSTGRES_USER=geoserver
+      - POSTGRES_PASSWORD=geoserver
+    ports:
+      - "5432:5432"
+
+  geoservermaster:
+    image: heitorcarneiro/geoserver:2.15.2-java11-hotspot
+    restart: always
+    environment:
+      - VIRTUAL_HOST=geoservermaster.localhost
+      - VIRTUAL_PORT=8080
+    volumes:
+      - "$PWD/logs/geoservermaster:/usr/local/tomcat/logs"
+    links:
+      - "db:postgis"
+    depends_on:
+      - "db"
+
+  geoserverslave:
+    image: heitorcarneiro/geoserver:2.15.2-java11-hotspot
+    restart: always
+    environment:
+      - VIRTUAL_HOST=geoserverslave.localhost
+      - VIRTUAL_PORT=8080
+    volumes:
+      - "$PWD/logs/geoserverslave:/usr/local/tomcat/logs"
+    links:
+      - "db:postgis"
+    depends_on:
+      - "db"
