@@ -77,11 +77,12 @@ RUN sed -i '\:</web-app>:i\
 ADD conf/server.xml /usr/local/tomcat/conf/server.xml
 
 # JVM
-# 2.15.2: -Xms2G -Xmx4G
-# 2.15.2-master: -Xms768M -Xmx1560M
-# 2.15.2-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
+# 2.15.2.1-java11-hotspot: -Xms128M -Xmx756M
+# 2.15.2.1-java11-hotspot-readonly: -Xms128M -Xmx756M
+# 2.15.2.1-java11-hotspot-master: -Xms768M -Xmx2048M
+# 2.15.2.1-java11-hotspot-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
 ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
- -Xms128M -Xmx756M \
+ -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true \
  -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
  -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
  -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
@@ -94,5 +95,5 @@ RUN echo "[LOG] JAVA_OPTS=$JAVA_OPTS"
 EXPOSE 8080
 ADD start.sh /usr/local/bin/start.sh
 
-HEALTHCHECK CMD curl --fail http://localhost:8080/geoserver/tiger/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=tiger%3Apoi&maxFeatures=50&outputFormat=application%2Fjson || exit 1
+# HEALTHCHECK CMD curl --fail http://localhost:8080/geoserver/tiger/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=tiger%3Apoi&maxFeatures=50&outputFormat=application%2Fjson || exit 1
 ENTRYPOINT ["/usr/local/bin/start.sh"]
