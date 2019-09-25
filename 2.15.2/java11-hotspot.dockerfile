@@ -111,10 +111,10 @@ RUN sed -i '\:</web-app>:i\
 </filter-mapping>' /usr/local/tomcat/conf/web.xml
 
 # JVM
-# 2.15.2.1-java11-hotspot: -Xms128M -Xmx756M
-# 2.15.2.1-java11-hotspot-readonly: -Xms128M -Xmx756M
-# 2.15.2.1-java11-hotspot-master: -Xms768M -Xmx2048M
-# 2.15.2.1-java11-hotspot-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
+# *-java11-hotspot: -Xms128M -Xmx756M
+# *-java11-hotspot-readonly: -Xms128M -Xmx756M -DGEOSERVER_CONSOLE_DISABLED=true
+# *-java11-hotspot-master: -Xms768M -Xmx2048M
+# *-java11-hotspot-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
 ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
  -Xms128M -Xmx756M \
  -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \

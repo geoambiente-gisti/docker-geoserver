@@ -1,10 +1,13 @@
 docker-geoserver
 ================
 
-Dockerized GeoServer with extensions: Charts, Control Flow, CSS, MongoDB, Monitor, Query Layer, Vector Tiles, Authkey, GWC-S3, JDBC-Metrics, JDBCConfig and JDBCStore. 
+Dockerized GeoServer with extensions: Charts, Control Flow, CSS, MongoDB, Monitor, Query Layer, Vector Tiles, Authkey, GWC-S3, JDBC-Metrics, JDBCConfig, JDBCStore, Importer and Importer BDB. 
 
 The biggest change is the use of GeoServer 2.15.2, and the **JAVA_OPTS**.
 
+### Versions
+
+**heitorcarneiro/geoserver:2.15.2.2-java11-hotspot**
 ```sh
 # Tomcat environment
 ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
@@ -15,6 +18,47 @@ ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
  -Dorg.geotools.referencing.forceXY=true -Dfile.encoding=UTF8 -Duser.timezone=GMT -Djavax.servlet.request.encoding=UTF-8 -Djavax.servlet.response.encoding=UTF-8 -Duser.timezone=GMT -Dorg.geotools.shapefile.datetime=true \
  -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
 ```
+
+
+**heitorcarneiro/geoserver:2.15.2.2-java11-hotspot-readonly**
+```sh
+# Tomcat environment
+ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
+ -Xms128M -Xmx756M -DGEOSERVER_CONSOLE_DISABLED=true \
+ -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
+ -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
+ -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
+ -Dorg.geotools.referencing.forceXY=true -Dfile.encoding=UTF8 -Duser.timezone=GMT -Djavax.servlet.request.encoding=UTF-8 -Djavax.servlet.response.encoding=UTF-8 -Duser.timezone=GMT -Dorg.geotools.shapefile.datetime=true \
+ -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+```
+
+
+**heitorcarneiro/geoserver:2.15.2.2-java11-hotspot-master**
+```sh
+# Tomcat environment
+ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
+ -Xms768M -Xmx2048M \
+ -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
+ -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
+ -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
+ -Dorg.geotools.referencing.forceXY=true -Dfile.encoding=UTF8 -Duser.timezone=GMT -Djavax.servlet.request.encoding=UTF-8 -Djavax.servlet.response.encoding=UTF-8 -Duser.timezone=GMT -Dorg.geotools.shapefile.datetime=true \
+ -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+```
+
+
+**heitorcarneiro/geoserver:2.15.2.2-java11-hotspot-slave**
+```sh
+# Tomcat environment
+ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
+ -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true \
+ -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
+ -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
+ -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
+ -Dorg.geotools.referencing.forceXY=true -Dfile.encoding=UTF8 -Duser.timezone=GMT -Djavax.servlet.request.encoding=UTF-8 -Djavax.servlet.response.encoding=UTF-8 -Duser.timezone=GMT -Dorg.geotools.shapefile.datetime=true \
+ -DGEOSERVER_DATA_DIR=${GEOSERVER_DATA_DIR}"
+```
+
+
 
 ## Features
 
@@ -78,7 +122,7 @@ services:
       - "$PWD/postgres-backup:/var/lib/postgresql/backup"
 
   geoserver:
-    image: heitorcarneiro/geoserver:2.15.2-java11-hotspot
+    image: heitorcarneiro/geoserver:2.15.2.2-java11-hotspot
     restart: always
     environment:
       - CATALINA_OPTS="-Djava.awt.headless=true -server -Xms512M -Xmx512M -DGEOSERVER_DATA_DIR=/var/local/geoserver"
