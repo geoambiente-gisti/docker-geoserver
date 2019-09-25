@@ -67,6 +67,14 @@ RUN sed -i '\:</web-app>:i\
         <param-name>cors.allowed.methods</param-name>\n\
         <param-value>GET,POST,HEAD,OPTIONS,PUT</param-value>\n\
     </init-param>\n\
+    <init-param>\n\
+        <param-name>cors.allowed.headers</param-name>\n\
+        <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>\n\
+    </init-param>\n\
+    <init-param>\n\
+        <param-name>cors.exposed.headers</param-name>\n\
+        <param-value>Access-Control-Allow-Origin,Access-Control-Allow-Credentials</param-value>\n\
+    </init-param>\n\
 </filter>\n\
 <filter-mapping>\n\
     <filter-name>CorsFilter</filter-name>\n\
@@ -76,13 +84,39 @@ RUN sed -i '\:</web-app>:i\
 # Tomcat environment
 ADD conf/server.xml /usr/local/tomcat/conf/server.xml
 
+RUN sed -i '\:</web-app>:i\
+<filter>\n\
+    <filter-name>CorsFilter</filter-name>\n\
+    <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>\n\
+    <init-param>\n\
+        <param-name>cors.allowed.origins</param-name>\n\
+        <param-value>*</param-value>\n\
+    </init-param>\n\
+    <init-param>\n\
+        <param-name>cors.allowed.methods</param-name>\n\
+        <param-value>GET,POST,HEAD,OPTIONS,PUT</param-value>\n\
+    </init-param>\n\
+    <init-param>\n\
+        <param-name>cors.allowed.headers</param-name>\n\
+        <param-value>Content-Type,X-Requested-With,accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers</param-value>\n\
+    </init-param>\n\
+    <init-param>\n\
+        <param-name>cors.exposed.headers</param-name>\n\
+        <param-value>Access-Control-Allow-Origin,Access-Control-Allow-Credentials</param-value>\n\
+    </init-param>\n\
+</filter>\n\
+<filter-mapping>\n\
+    <filter-name>CorsFilter</filter-name>\n\
+    <url-pattern>/*</url-pattern>\n\
+</filter-mapping>' /usr/local/tomcat/conf/web.xml
+
 # JVM
 # 2.15.2.1-java11-hotspot: -Xms128M -Xmx756M
 # 2.15.2.1-java11-hotspot-readonly: -Xms128M -Xmx756M
 # 2.15.2.1-java11-hotspot-master: -Xms768M -Xmx2048M
 # 2.15.2.1-java11-hotspot-slave: -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true -DGWC_DISKQUOTA_DISABLED=true -DGWC_METASTORE_DISABLED=true
 ENV GEOSERVER_OPTS "-server -Djava.awt.headless=true \
- -Xms2G -Xmx3G -DGEOSERVER_CONSOLE_DISABLED=true \
+ -Xms128M -Xmx756M \
  -XX:SoftRefLRUPolicyMSPerMB=36000 -XX:+UseParallelGC \
  -XX:PerfDataSamplingInterval=500 -XX:NewRatio=2 \
  -XX:-UseContainerSupport -XX:InitialRAMPercentage=50 -XX:MaxRAMPercentage=70 \
